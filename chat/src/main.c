@@ -37,8 +37,9 @@ static void fatal_shutdown(char *message) {
 static void print_usage_and_exit_with_code(int exit_status) {
     fprintf(stderr, "Usage: chat [OPTION]... host\n"
             "Talk among other users connected to a chat server.\n\n"
-            "-u\tSet username to be displayed to chat members\n"
-            "-p\tSpecify port to connect to server on\n");
+            "-h, --help\tDisplay this help and exit\n"
+            "-p\t\tSpecify port to connect to server on\n"
+            "-u\t\tSet username to be displayed to chat members\n");
     exit(exit_status);
 }
 
@@ -51,8 +52,10 @@ int main(int argc, char **argv) {
         print_usage_and_exit_with_code(EXIT_SUCCESS);
     }
     
-    while((option = getopt(argc, argv, ":p:u:")) != -1) {        
+    while((option = getopt(argc, argv, ":hp:u:")) != -1) {        
         switch(option) {
+            case 'h':
+                print_usage_and_exit_with_code(EXIT_SUCCESS);
             case 'p':
                 login.port = (char *) malloc(strlen(optarg));
                 strcpy(login.port, optarg);
