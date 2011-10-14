@@ -4,12 +4,12 @@
  * Lab 5 -- UNIX chat program
  * 14 October 2011
  *
- * Network send thread
+ * Network startup thread
  */
 
-#ifndef NETWORK_SEND
-#define NETWORK_SEND
+#ifndef NETWORK
+#define NETWORK
 
-void *send_thread(void *);
+void *network_thread(void *);
 
 #endif

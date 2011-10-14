@@ -20,6 +20,5 @@
 typedef pthread_t thread_id;
 
 void start_thread(pthread_t *, void *(* thread_function)(void *), void *);
-void *join_thread(pthread_t *);
     
 #endif

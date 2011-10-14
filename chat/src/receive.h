@@ -7,8 +7,8 @@
  * Network receive thread
  */
 
-#ifndef RECEIVE
-#define RECEIVE
+#ifndef NETWORK_RECEIVE
+#define NETWORK_RECEIVE
 
 void *receive_thread(void *);
 

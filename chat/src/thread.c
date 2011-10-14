@@ -9,21 +9,32 @@
 
 #include "thread.h"
 
+/* TODO: Look further at thread priority */
+
 void start_thread(pthread_t *thread, void *(* thread_function)(void *),
                          void *argument) {
     int thread_error_code;
-    thread_error_code = pthread_create(thread, NULL, thread_function, argument);
+    pthread_attr_t attributes;
+    
+    thread_error_code = pthread_attr_init(&attributes);
+    if(thread_error_code != 0) {
+        fatal_shutdown("Error initializing thread attributes");
+    }
+    
+    thread_error_code = pthread_attr_setdetachstate(&attributes,
+            PTHREAD_CREATE_DETACHED);
+    if(thread_error_code != 0) {
+        fatal_shutdown("Error setting thread detach state attribute");
+    }
+    
+    thread_error_code = pthread_create(thread, &attributes, thread_function,
+            argument);
     if(thread_error_code != 0) {
         fatal_shutdown("Error starting thread");
     }
-}
-
-void *join_thread(pthread_t *thread) {
-    int thread_error_code;
-    void *thread_return_value;
-    thread_error_code = pthread_join(*thread, &thread_return_value);
+    
+    thread_error_code = pthread_attr_destroy(&attributes);
     if(thread_error_code != 0) {
-        fatal_shutdown("Error joining thread");
+        fatal_shutdown("Error destroying attributes");
     }
-    return thread_return_value;
 }
