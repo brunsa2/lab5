@@ -10,6 +10,8 @@
 #ifndef UI
 #define UI
 
+#include <stdlib.h>
+
 void *ui_thread(void *);
 
 #endif

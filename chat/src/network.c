@@ -7,12 +7,7 @@
  * Network startup thread
  */
 
-#include <stdio.h>
-
-#include "thread.h"
 #include "network.h"
-#include "send.h"
-#include "receive.h"
 
 void *network_thread(void *argument) {
     thread_id send_thread_id, receive_thread_id;

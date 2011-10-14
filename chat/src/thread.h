@@ -15,7 +15,12 @@
 #include <stdlib.h>
 
 typedef pthread_t thread_id;
+typedef pthread_mutex_t mutex_id;
 
 void start_thread(pthread_t *, void *(* thread_function)(void *), void *);
+void initialize_mutex(mutex_id *);
+void lock(mutex_id *);
+void unlock(mutex_id *);
+void destroy_mutex(mutex_id *);
     
 #endif

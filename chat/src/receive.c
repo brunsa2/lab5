@@ -7,8 +7,6 @@
  * Network receive thread
  */
 
-#include <stdio.h>
-
 #include "receive.h"
 
 void *receive_thread(void *argument) {

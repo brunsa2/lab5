@@ -10,6 +10,10 @@
 #ifndef NETWORK
 #define NETWORK
 
+#include "thread.h"
+#include "send.h"
+#include "receive.h"
+
 void *network_thread(void *);
 
 #endif

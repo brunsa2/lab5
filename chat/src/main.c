@@ -28,6 +28,9 @@
 extern int optind, opterr, optopt;
 extern char *optarg;
 
+/* Locks */
+mutex_id kb_buffer_mutex;
+
 /* Data for logging into server to be handled by send/receive system */
 typedef struct {
     char *username;
@@ -89,12 +92,16 @@ int main(int argc, char **argv) {
     /* TODO: Check for null for any login block information and set it to a
      * default value */
     
+    initialize_mutex(&kb_buffer_mutex);
+    
     start_thread(&kb_thread_id, kb_thread, NULL);
     start_thread(&tick_thread_id, tick_thread, NULL);
     start_thread(&ui_thread_id, ui_thread, NULL);
     start_thread(&network_thread_id, network_thread, NULL);
     
     ctrl_thread();
+    
+    destroy_mutex(&kb_buffer_mutex);
     
     return 0;
 }

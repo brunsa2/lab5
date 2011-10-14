@@ -10,6 +10,12 @@
 #ifndef KEYBOARD
 #define KEYBOARD
 
+#include <stdio.h>
+#include <stdbool.h>
+
+#include "thread.h"
+
 void *kb_thread(void *);
+bool has_key(void);
 
 #endif

@@ -7,12 +7,7 @@
  * Tick counting thread
  */
 
-#include <stdio.h>
-#include <time.h>
-#include <stdbool.h>
-
 #include "tick.h"
-#include "controller.h"
 
 #define MICROSECONDS_BETWEEN_CLOCK_UPDATE 1000000
 

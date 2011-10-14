@@ -7,15 +7,15 @@
  * Main controller thread
  */
 
-#include <stdio.h>
-
 #include "controller.h"
-#include "tick.h"
 
 void ctrl_thread(void) {
     int x;
-    for(x = 0; x < 10; x++) {
-        usleep(1000000);
+    for(x = 0; x < 1000; x++) {
+        if(has_key()) {
+            printf("Has key\n");
+        }
+        usleep(10000);
     }
 }
 

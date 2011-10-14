@@ -10,6 +10,8 @@
 #ifndef NETWORK_SEND
 #define NETWORK_SEND
 
+#include <stdlib.h>
+
 void *send_thread(void *);
 
 #endif

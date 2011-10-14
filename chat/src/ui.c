@@ -7,8 +7,6 @@
  * User interface thread
  */
 
-#include <stdio.h>
-
 #include "ui.h"
 
 void *ui_thread(void *argument) {

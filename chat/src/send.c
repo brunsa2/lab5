@@ -7,8 +7,6 @@
  * Network send thread
  */
 
-#include <stdio.h>
-
 #include "send.h"
 
 void *send_thread(void *argument) {    

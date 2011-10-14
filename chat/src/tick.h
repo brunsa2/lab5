@@ -10,6 +10,12 @@
 #ifndef TICK
 #define TICK
 
+#include <stdio.h>
+#include <time.h>
+#include <stdbool.h>
+
+#include "controller.h"
+
 void *tick_thread(void *);
 int get_elapsed_ticks(void);
 
