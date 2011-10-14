@@ -10,6 +10,6 @@
 #ifndef KEYBOARD
 #define KEYBOARD
 
-void *kb_thread(void *argument);
+void *kb_thread(void *);
 
 #endif

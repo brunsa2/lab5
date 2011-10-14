@@ -2,19 +2,19 @@
  * Jeff Stubler
  * CS 3841
  * Lab 5 -- UNIX chat program
- * 13 October 2011
+ * 14 October 2011
  *
- * Keyboard buffer system
+ * Main controller thread
  */
 
 #include <stdio.h>
 
-#include "keyboard.h"
+#include "controller.h"
 
-void *kb_thread(void *argument) {
+void *ctrl_thread(void *argument) {
     int x;
     for(x = 0; x < 5; x++) {
-        printf("Keyboard\n");
+        printf("Controller\n");
         usleep(50000);
     }
     

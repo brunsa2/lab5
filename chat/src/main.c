@@ -14,7 +14,12 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "thread.h"
 #include "keyboard.h"
+#include "controller.h"
+
+#define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
+        exit(EXIT_FAILURE);
 
 /* Variables for parsing command line arguments */
 extern int optind, opterr, optopt;
@@ -29,11 +34,6 @@ typedef struct {
 
 login_info login;
 
-static void fatal_shutdown(char *message) {
-    fprintf(stderr, "%s\n", message);
-    exit(EXIT_FAILURE);
-}
-
 static void print_usage_and_exit_with_code(int exit_status) {
     fprintf(stderr, "Usage: chat [OPTION]... host\n"
             "Talk among other users connected to a chat server.\n\n"
@@ -45,7 +45,7 @@ static void print_usage_and_exit_with_code(int exit_status) {
 
 int main(int argc, char **argv) {
     int option, thread_error_code;
-    pthread_t kb_thread_id;
+    thread_id kb_thread_id, ctrl_thread_id;
     void *return_value;
     
     if(argc > 1 && strcmp(argv[1], "--help") == 0) {
@@ -86,23 +86,17 @@ int main(int argc, char **argv) {
     /* TODO: Check for null for any login block information and set it to a
      * default value */
     
-    printf("%s@%s:%s\n", login.username, login.server, login.port);
-    
-    thread_error_code = pthread_create(&kb_thread_id, NULL, kb_thread, NULL);
-    if(thread_error_code != 0) {
-        fatal_shutdown("Error starting keyboard thread");
-    }
+    start_thread(&kb_thread_id, kb_thread, NULL);
+    start_thread(&ctrl_thread_id, ctrl_thread, NULL);
     
     int x;
-    for(x = 0; x < 10; x++) {
-        usleep(100000);
+    for(x = 0; x < 5; x++) {
+        usleep(50000);
         printf("Main\n");
     }
     
-    thread_error_code = pthread_join(kb_thread_id, &return_value);
-    if(thread_error_code != 0) {
-        fatal_shutdown("Error joinging keyboard thread");
-    }
+    join_thread(&kb_thread_id);
+    join_thread(&ctrl_thread_id);
     
     return 0;
 }
