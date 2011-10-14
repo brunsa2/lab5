@@ -9,13 +9,17 @@
  */
 
 #include <stdio.h>
+#include <syslog.h>
 
 #include "daemon.h"
 
 int main(int argc, char **argv) {
-    printf("Becoming daemon\n");
     become_daemon();
     
+    int x = 0;
+    
     for(;;) {
+        sleep(1);
+        syslog(LOG_DEBUG, "chatd is alive!");
     }
 }
