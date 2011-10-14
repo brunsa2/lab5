@@ -11,12 +11,10 @@
 
 #include "controller.h"
 
-void *ctrl_thread(void *argument) {
+void ctrl_thread(void) {
     int x;
     for(x = 0; x < 5; x++) {
         printf("Controller\n");
         usleep(50000);
     }
-    
-    return NULL;
 }

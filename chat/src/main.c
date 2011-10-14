@@ -15,8 +15,12 @@
 #include <pthread.h>
 
 #include "thread.h"
-#include "keyboard.h"
 #include "controller.h"
+#include "keyboard.h"
+#include "tick.h"
+#include "ui.h"
+#include "send.h"
+#include "receive.h"
 
 #define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
         exit(EXIT_FAILURE);
@@ -45,7 +49,8 @@ static void print_usage_and_exit_with_code(int exit_status) {
 
 int main(int argc, char **argv) {
     int option, thread_error_code;
-    thread_id kb_thread_id, ctrl_thread_id;
+    thread_id kb_thread_id, tick_thread_id, ui_thread_id;
+    thread_id send_thread_id, receive_thread_id;
     void *return_value;
     
     if(argc > 1 && strcmp(argv[1], "--help") == 0) {
@@ -87,16 +92,18 @@ int main(int argc, char **argv) {
      * default value */
     
     start_thread(&kb_thread_id, kb_thread, NULL);
-    start_thread(&ctrl_thread_id, ctrl_thread, NULL);
+    start_thread(&tick_thread_id, tick_thread, NULL);
+    start_thread(&ui_thread_id, ui_thread, NULL);
+    start_thread(&send_thread_id, send_thread, NULL);
+    start_thread(&receive_thread_id, receive_thread, NULL);
     
-    int x;
-    for(x = 0; x < 5; x++) {
-        usleep(50000);
-        printf("Main\n");
-    }
+    ctrl_thread();
     
     join_thread(&kb_thread_id);
-    join_thread(&ctrl_thread_id);
+    join_thread(&tick_thread_id);
+    join_thread(&ui_thread_id);
+    join_thread(&send_thread_id);
+    join_thread(&receive_thread_id);
     
     return 0;
 }

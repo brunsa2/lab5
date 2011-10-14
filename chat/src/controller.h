@@ -10,6 +10,6 @@
 #ifndef CONTROLLER
 #define CONTROLLER
 
-void *ctrl_thread(void *);
+void ctrl_thread(void);
 
 #endif
