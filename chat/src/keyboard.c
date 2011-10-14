@@ -12,11 +12,5 @@
 #include "keyboard.h"
 
 void *kb_thread(void *argument) {
-    int x;
-    for(x = 0; x < 5; x++) {
-        printf("Keyboard\n");
-        usleep(50000);
-    }
-    
     return NULL;
 }

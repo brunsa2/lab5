@@ -11,5 +11,6 @@
 #define TICK
 
 void *tick_thread(void *);
+int get_elapsed_ticks(void);
 
 #endif

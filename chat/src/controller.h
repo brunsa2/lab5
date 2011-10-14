@@ -11,5 +11,6 @@
 #define CONTROLLER
 
 void ctrl_thread(void);
+void clock_tick(void);
 
 #endif
