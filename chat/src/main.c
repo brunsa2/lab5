@@ -9,6 +9,7 @@
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,17 +23,15 @@
 #include "network.h"
 
 #define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
-        exit(EXIT_FAILURE);
+exit(EXIT_FAILURE);
 
 /* Variables for parsing command line arguments */
 extern int optind, opterr, optopt;
 extern char *optarg;
 
-/* Locks */
-mutex_id kb_buffer_mutex;
-
 /* Data for logging into server to be handled by send/receive system */
 typedef struct {
+    bool anonymous;
     char *username;
     char *server;
     char *port;
@@ -43,9 +42,10 @@ login_info login;
 static void print_usage_and_exit_with_code(int exit_status) {
     fprintf(stderr, "Usage: chat [OPTION]... host\n"
             "Talk among other users connected to a chat server.\n\n"
+            "-a\t\tJoin anonymously without greeting message\n"
             "-h, --help\tDisplay this help and exit\n"
             "-p\t\tSpecify port to connect to server on\n"
-            "-u\t\tSet username to be displayed to chat members\n");
+            "-u\t\tSet username to be displayed to chat members\n\n");
     exit(exit_status);
 }
 
@@ -58,8 +58,10 @@ int main(int argc, char **argv) {
         print_usage_and_exit_with_code(EXIT_SUCCESS);
     }
     
-    while((option = getopt(argc, argv, ":hp:u:")) != -1) {        
+    while((option = getopt(argc, argv, ":ahp:u:")) != -1) {        
         switch(option) {
+            case 'a':
+                login.anonymous = true;
             case 'h':
                 print_usage_and_exit_with_code(EXIT_SUCCESS);
             case 'p':
@@ -92,16 +94,12 @@ int main(int argc, char **argv) {
     /* TODO: Check for null for any login block information and set it to a
      * default value */
     
-    initialize_mutex(&kb_buffer_mutex);
-    
     start_thread(&kb_thread_id, kb_thread, NULL);
     start_thread(&tick_thread_id, tick_thread, NULL);
     start_thread(&ui_thread_id, ui_thread, NULL);
     start_thread(&network_thread_id, network_thread, NULL);
     
     ctrl_thread();
-    
-    destroy_mutex(&kb_buffer_mutex);
     
     return 0;
 }
