@@ -17,9 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <signal.h>
 
 #define MAX_FILE_DESCRIPTOR_TO_CLOSE 8192
 
-int become_daemon(void);
+int become_daemon(void (* sig_handler)(int)); 
 
 #endif

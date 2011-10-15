@@ -16,7 +16,8 @@
 #define nonfatal_shutdown(message) syslog(LOG_NOTICE, message); \
         exit(EXIT_SUCCESS);
 
-int become_daemon(void) {
+int become_daemon(void (* sig_handler)(int)) {
+    struct sigaction sigact;
     int maximum_fd, current_fd, lock_fd;
     char pid_string[PID_STRING_LENGTH];
     
@@ -25,10 +26,20 @@ int become_daemon(void) {
     syslog(LOG_INFO, "This is chatd. 14 October 2011 Jeff Stubler for CS 3841 "
             "UNIX chat system lab 5");
     
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = SA_RESTART;
+    sigact.sa_handler = sig_handler;
+    if(sigaction(SIGHUP, &sigact, NULL) == -1) {
+        fatal_shutdown("Error setting SIGHUP signal handler");
+    }
+    if(sigaction(SIGTERM, &sigact, NULL) == -1) {
+        fatal_shutdown("Error setting SIGTERM signal handler");
+    }
+    
     /* Become a background process */
     switch(fork()) {
         case -1:
-            fatal_shutdown("Error becoming background process");
+            fatal_shutdown("Error becomming background process");
         case 0:
             /* Child process should continue */
             break;
@@ -38,7 +49,7 @@ int become_daemon(void) {
     
     /* Become leader of new session */
     if(setsid() == -1) {
-        return -1;
+        fatal_shutdown("Error becomming session leader");
     }
     
     /* Ensure that we are not leader of new session */
