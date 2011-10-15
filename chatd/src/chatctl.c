@@ -7,10 +7,17 @@
  * Chat daemon control
  */
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#define PID_STRING_LENGTH 16
+
+#define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
+        exit(EXIT_FAILURE);
 
 static void print_usage_and_exit_with_code(int exit_status) {
     fprintf(stderr, "Usage: chatctl command\n\n"
@@ -22,6 +29,27 @@ static void print_usage_and_exit_with_code(int exit_status) {
     exit(exit_status);
 }
 
+static void send_signal_to_chatd(int signal) {
+    int lock_fd, pid_error;
+    char pid_string[PID_STRING_LENGTH];
+    pid_t pid;
+    
+    lock_fd = open("./chatd.lock", O_RDONLY);
+    if(lock_fd < 0) {
+        fatal_shutdown("Could not open lock file");
+    }
+    if(read(lock_fd, pid_string, PID_STRING_LENGTH) < 1) {
+        fatal_shutdown("Could not read lock file");
+    }
+    close(lock_fd);
+    
+    pid = (pid_t) atoi(pid_string);
+    pid_error = kill(pid, signal);
+    if(pid_error != 0) {
+        fatal_shutdown("Could not stop chatd");
+    }
+}
+
 static void start_chatd(void) {
     printf("Starting chatd...\n");
     execl("./chatd", "./chatd", (char *) NULL);
@@ -30,11 +58,13 @@ static void start_chatd(void) {
 }
 
 static void stop_chatd(void) {
-    printf("Stopping chatd\n");
+    printf("Stopping chatd...\n");
+    send_signal_to_chatd(SIGTERM);
 }
 
 static void force_stop_chatd(void) {
-    printf("Force stopping chatd\n");
+    printf("Force stopping chatd...\n");
+    send_signal_to_chatd(SIGKILL);
 }
 
 int main(int argc, char **argv) {    
