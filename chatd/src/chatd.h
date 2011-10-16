@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <syslog.h>
+#include <stdbool.h>
 
 #include "daemon.h"
 

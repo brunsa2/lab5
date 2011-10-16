@@ -24,6 +24,7 @@ static void print_usage_and_exit_with_code(int exit_status) {
             "start\t\tStart chatd\n"
             "stop\t\tStop chatd\n"
             "restart\t\tRestard chatd\n"
+            "refresh\t\tRefresh server and cancel any server shutdown\n"
             "force-stop\tForce restart chatd\n"
             "force-restart\tForce restart chatd\n\n");
     exit(exit_status);
@@ -46,7 +47,7 @@ static void send_signal_to_chatd(int signal) {
     pid = (pid_t) atoi(pid_string);
     pid_error = kill(pid, signal);
     if(pid_error != 0) {
-        fatal_shutdown("Could not stop chatd");
+        fatal_shutdown("Could not send signal to chatd");
     }
 }
 
@@ -60,6 +61,11 @@ static void start_chatd(void) {
 static void stop_chatd(void) {
     printf("Stopping chatd...\n");
     send_signal_to_chatd(SIGTERM);
+}
+
+static void refresh_chatd(void) {
+    printf("Refreshing chatd...\n");
+    send_signal_to_chatd(SIGHUP);
 }
 
 static void force_stop_chatd(void) {
@@ -89,6 +95,12 @@ int main(int argc, char **argv) {
        (argc > 1 && strcmp(argv[1], "restart") == 0)) {
         stop_chatd();
         start_chatd();
+        return 0;
+    }
+    
+    if(strcmp(argv[0], "chatd-refresh") == 0 ||
+       (argc > 1 && strcmp(argv[1], "refresh") == 0)) {
+        refresh_chatd();
         return 0;
     }
     
