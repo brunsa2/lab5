@@ -12,3 +12,7 @@
 void *receive_thread(void *argument) {
     return NULL;
 }
+
+message *get_message(void) {
+    return NULL;
+}

@@ -15,7 +15,7 @@
 
 #define adjusted_head(head) (head == 0 ? KB_BUFFER_SIZE : head)
 
-extern mutex_id kb_buffer_mutex;
+mutex_id kb_buffer_mutex;
 
 static char kb_buffer[KB_BUFFER_SIZE];
 static int kb_buffer_head = KB_FIRST_HEAD, kb_buffer_tail = KB_FIRST_TAIL;
@@ -59,4 +59,8 @@ bool has_key(void) {
         unlock(&kb_buffer_mutex);
         return true;
     }
+}
+
+char *get_string(void) {
+    return NULL;
 }

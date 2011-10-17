@@ -10,15 +10,21 @@
 #include "controller.h"
 
 void ctrl_thread(void) {
-    int x;
-    for(x = 0; x < 1000; x++) {
-        if(has_key()) {
-            printf("Has key\n");
-        }
-        usleep(10000);
-    }
+    
 }
 
 void clock_tick(void) {
+    
+}
+
+void string_entered(void) {
+    
+}
+
+void network_ready(void) {
+    
+}
+
+void message_arrived(void) {
     
 }

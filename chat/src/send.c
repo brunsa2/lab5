@@ -12,3 +12,7 @@
 void *send_thread(void *argument) {    
     return NULL;
 }
+
+void send_message(message *sending_message) {
+    
+}

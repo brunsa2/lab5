@@ -12,6 +12,9 @@
 
 #include <stdlib.h>
 
+#include "network.h"
+
 void *send_thread(void *);
+void send_message(message *);
 
 #endif

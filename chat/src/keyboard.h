@@ -17,5 +17,6 @@
 
 void *kb_thread(void *);
 bool has_key(void);
+char *get_string(void);
 
 #endif

@@ -65,10 +65,16 @@ int main(int argc, char **argv) {
             case 'h':
                 print_usage_and_exit_with_code(EXIT_SUCCESS);
             case 'p':
+                if(login.port != NULL) {
+                    free(login.port);
+                }
                 login.port = (char *) malloc(strlen(optarg));
                 strcpy(login.port, optarg);
                 break;
             case 'u':
+                if(login.username != NULL) {
+                    free(login.username);
+                }
                 login.username = (char *) malloc(strlen(optarg));
                 strcpy(login.username, optarg);
                 break;
@@ -100,6 +106,10 @@ int main(int argc, char **argv) {
     start_thread(&network_thread_id, network_thread, NULL);
     
     ctrl_thread();
+    
+    free(login.username);
+    free(login.server);
+    free(login.port);
     
     return 0;
 }
