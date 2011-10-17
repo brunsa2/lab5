@@ -9,6 +9,9 @@
 
 #include "thread.h"
 
+#define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
+        exit(EXIT_FAILURE);
+
 /* TODO: Look further at thread priority */
 
 void start_thread(pthread_t *thread, void *(* thread_function)(void *),

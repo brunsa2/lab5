@@ -12,8 +12,9 @@
 
 #define READ_BUFFER_SIZE 1024
 #define MAX_TOKEN_SIZE 1024
+#define PORT_STR_LENGTH 8
 
-#define fatal_shutdown(message) syslog(LOG_CRIT, message); \
+#define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
         exit(EXIT_FAILURE);
 
 typedef struct {
@@ -39,6 +40,9 @@ static void init_configuration(configuration *config) {
 
 configuration config;
 bool should_terminate;
+
+int sock_fd;
+struct linkedList thread_list;
 
 static void parse_configuration_line(configuration *config,
         char *configuration_line) {
@@ -123,14 +127,77 @@ static void read_configuration(configuration *config) {
     }
 }
 
-static void chatd(void) {
-    int x = 0;
+static void chatd() {
+    struct addrinfo hints, *servinfo, *current_addr;
+    char port_str[PORT_STR_LENGTH];
+    int gai_error_code;
+    int yes = 1;
+    int thread_index;
+    thread_data new_thread;
     
     init_configuration(&config);
     read_configuration(&config);
     
-    server();
-
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+    
+    sprintf(port_str, "%d", config.port);
+    
+    if((gai_error_code = getaddrinfo(NULL, port_str, &hints, &servinfo)) != 0) {
+        syslog(LOG_CRIT, "Could not get address info: %s",
+                gai_strerror(gai_error_code));
+        exit(EXIT_FAILURE);
+    }
+    
+    for(current_addr = servinfo; current_addr != NULL;
+            current_addr = current_addr->ai_next) {
+        if((sock_fd = socket(current_addr->ai_family, current_addr->ai_socktype,
+                current_addr->ai_protocol)) == -1) {
+            syslog(LOG_INFO, "Could not open socket with this address");
+            continue;
+        }
+        
+        if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes,
+                      sizeof(int)) == -1) {
+            syslog(LOG_INFO, "Could not set up reusable addresses");
+            exit(EXIT_FAILURE);
+        }
+        
+        if(bind(sock_fd, current_addr->ai_addr, current_addr->ai_addrlen) ==
+                -1) {
+            close(sock_fd);
+            syslog(LOG_INFO, "Could not bind to socket with this address");
+            continue;
+        }
+        
+        break;
+    }
+    
+    if(current_addr == NULL) {
+        syslog(LOG_CRIT, "Could not bind to socket");
+        exit(EXIT_FAILURE);
+    }
+    
+    freeaddrinfo(servinfo);
+    
+    if(listen(sock_fd, config.max_threads) == -1) {
+        syslog(LOG_CRIT, "Could not listen");
+        exit(EXIT_FAILURE);
+    }
+    
+    ll_init(&thread_list);
+    
+    for(thread_index = 0; thread_index < config.max_threads; thread_index++) {
+        memset(&new_thread, 0, sizeof(new_thread));
+        ll_init(&(new_thread.message_queue));
+        ll_add(&thread_list, &new_thread, sizeof(new_thread));
+        syslog(LOG_INFO, "Initialized thread %d", thread_index);
+        start_thread(ll_get(&thread_list, thread_index), socket_thread,
+                ll_get(&thread_list, thread_index));
+    }
+    
+    for(;;);
 }
 
 void signal_handler(int signal) {
@@ -142,6 +209,7 @@ void signal_handler(int signal) {
         case SIGTERM:
             should_terminate = true;
             syslog(LOG_INFO, "chatd is stopping");
+            close(sock_fd);
             syslog(LOG_INFO, "chatd has stopped");
             exit(EXIT_SUCCESS);
     }
