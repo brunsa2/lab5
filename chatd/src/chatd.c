@@ -129,10 +129,7 @@ static void chatd(void) {
     init_configuration(&config);
     read_configuration(&config);
     
-    for(;;) {
-        sleep(10);
-        syslog(LOG_DEBUG, "chatd is alive!");
-    }
+    server();
 
 }
 
