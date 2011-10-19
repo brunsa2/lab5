@@ -8,34 +8,14 @@
  * main controller for system
  */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
-
-#include "thread.h"
-#include "controller.h"
-#include "keyboard.h"
-#include "tick.h"
-#include "ui.h"
-#include "network.h"
+#include "main.h"
 
 #define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
-exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
 
 /* Variables for parsing command line arguments */
 extern int optind, opterr, optopt;
 extern char *optarg;
-
-/* Data for logging into server to be handled by send/receive system */
-typedef struct {
-    bool anonymous;
-    char *username;
-    char *server;
-    char *port;
-} login_info;
 
 login_info login;
 
