@@ -1,2 +1,3 @@
 makefile
 *.lock
+makectl

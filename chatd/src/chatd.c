@@ -188,16 +188,20 @@ static void chatd() {
     
     ll_init(&thread_list);
     
+    syslog(LOG_INFO, "Using socket fd %d", sock_fd);
+    
     for(thread_index = 0; thread_index < config.max_threads; thread_index++) {
+        thread_id thread;
         memset(&new_thread, 0, sizeof(new_thread));
+        new_thread.socket = sock_fd;
         ll_init(&(new_thread.message_queue));
         ll_add(&thread_list, &new_thread, sizeof(new_thread));
         syslog(LOG_INFO, "Initialized thread %d", thread_index);
-        start_thread(ll_get(&thread_list, thread_index), socket_thread,
+        start_thread(&thread, socket_thread,
                 ll_get(&thread_list, thread_index));
     }
     
-    for(;;);
+    for(;;) sleep(10);
 }
 
 void signal_handler(int signal) {

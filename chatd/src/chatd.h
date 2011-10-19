@@ -10,6 +10,9 @@
 #ifndef CHATD
 #define CHATD
 
+#define MAX_HEADER_SIZE 16
+#define MAX_MESSAGE_SIZE 16
+
 #include <stdio.h>
 #include <syslog.h>
 #include <stdbool.h>
@@ -30,9 +33,15 @@
 
 typedef struct {
     int socket;
-    thread_id thread;
     struct linkedList message_queue;
 } thread_data;
+
+typedef struct {
+    char *headers[MAX_HEADER_SIZE];
+    int header_size;
+    char *message[MAX_MESSAGE_SIZE];
+    int message_size;
+} message;
 
 #include "socketthread.h"
 

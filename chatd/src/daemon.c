@@ -35,6 +35,9 @@ int become_daemon(void (* sig_handler)(int)) {
     if(sigaction(SIGTERM, &sigact, NULL) == -1) {
         fatal_shutdown("Error setting SIGTERM signal handler");
     }
+    if(signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+        fatal_shutdown("Error ignoring SIGPIPE signal");
+    }
     
     /* Become a background process */
     switch(fork()) {
