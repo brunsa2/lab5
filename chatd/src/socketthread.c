@@ -68,6 +68,9 @@ static void *receive_thread(void *thread) {
         message incoming_message;
         int bytes_handled;
         char buffer[BUFFER_SIZE];
+        time_t current_time;
+        size_t time_buffer_bytes;
+        struct tm *local_time;
         
         incoming_message.header_size = 0;
         incoming_message.headers =
@@ -87,18 +90,34 @@ static void *receive_thread(void *thread) {
             incoming_message.headers[incoming_message.header_size] =
                     (char *) malloc(strlen(buffer));
             strcpy(incoming_message.headers[incoming_message.header_size],
-                    buffer);
-            
+                   buffer);
             incoming_message.header_size++;
         }
-        
-        syslog(LOG_INFO, "Received headers");
+    
+        current_time = time(NULL);
+        local_time = localtime(&current_time);
+        if(local_time != NULL) {
+            time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
+                    "%a, %d %b %Y %T %Z", local_time);
+            if(time_buffer_bytes != 0) {
+                incoming_message.headers[incoming_message.header_size] =
+                        (char *) malloc(strlen("Received-at: ") +
+                        strlen(buffer) + strlen("\r\r"));
+                strcpy(incoming_message.headers[incoming_message.header_size],
+                        "Received-at: ");
+                strcat(incoming_message.headers[incoming_message.header_size],
+                        buffer);
+                strcat(incoming_message.headers[incoming_message.header_size],
+                        "\r\n");
+                incoming_message.header_size++;
+            }
+        }
         
         while(true) {
             bytes_handled = read_line(client_fd, buffer, BUFFER_SIZE);
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
-               incoming_message.message_size == MAX_MESSAGES) {
+                incoming_message.message_size == MAX_MESSAGES) {
                 break;
             }
             
@@ -109,8 +128,6 @@ static void *receive_thread(void *thread) {
             
             incoming_message.message_size++;
         }
-        
-        syslog(LOG_INFO, "Received message");
         
         int x;
         for(x = 0; x < incoming_message.header_size; x++) {
@@ -161,38 +178,9 @@ void *socket_thread(void *thread) {
         
         start_joinable_thread(&receive_thread_id, receive_thread, &this_thread);
         
-        /*while(true) {
-            bytes_handled = read(client_fd, buffer, BUFFER_SIZE);
-            if(bytes_handled < 1) {
-                syslog(LOG_CRIT, "Could not read data");
-                if(errno == EPIPE) {
-                    syslog(LOG_CRIT, "Broken pipe");
-                }
-                break;
-            }
-            buffer[bytes_handled] = '\0';
-            
-            if((bytes_handled = strcmp(buffer, "exit\r\n")) == 0) {
-                syslog(LOG_INFO, "Client wants out");
-                break;
-            } else {
-                syslog(LOG_INFO, "Client continues to talk... %d", bytes_handled);
-            }
-            
-            bytes_handled = write(client_fd, buffer, strlen(buffer));
-            if(bytes_handled < 1) {
-                syslog(LOG_CRIT, "Could not write data");
-                if(errno == EPIPE) {
-                    syslog(LOG_CRIT, "Broken pipe");
-                }
-                break;
-            }
-        }*/
         
         
         join_thread(&receive_thread_id);
-        
-        
         
         close(client_fd);
         

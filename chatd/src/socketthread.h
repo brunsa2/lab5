@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <time.h>
 
 #include "chatd.h"
 #include "thread.h"
