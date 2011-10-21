@@ -10,8 +10,8 @@
 #ifndef CHATD
 #define CHATD
 
-#define MAX_HEADER_SIZE 16
-#define MAX_MESSAGE_SIZE 16
+#define MAX_HEADERS 16
+#define MAX_MESSAGES 4
 
 #include <stdio.h>
 #include <syslog.h>
@@ -37,9 +37,9 @@ typedef struct {
 } thread_data;
 
 typedef struct {
-    char *headers[MAX_HEADER_SIZE];
+    char **headers;
     int header_size;
-    char *message[MAX_MESSAGE_SIZE];
+    char **message;
     int message_size;
 } message;
 

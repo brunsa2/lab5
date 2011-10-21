@@ -69,35 +69,66 @@ static void *receive_thread(void *thread) {
         int bytes_handled;
         char buffer[BUFFER_SIZE];
         
+        incoming_message.header_size = 0;
+        incoming_message.headers =
+                (char **) malloc(MAX_HEADERS * sizeof(char *));
+        incoming_message.message_size = 0;
+        incoming_message.message =
+                (char **) malloc(MAX_MESSAGES * sizeof(char *));
+        
         while(true) {
             bytes_handled = read_line(client_fd, buffer, BUFFER_SIZE);
-            if(bytes_handled < 1) {
-                break;
-            }
             
-            if(strcmp("\r\n", buffer) == 0) {
-                break;
-            }
-            
-            if(incoming_message.header_size == MAX_HEADER_SIZE) {
+            if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
+                    incoming_message.header_size == MAX_HEADERS) {
                 break;
             }
             
             incoming_message.headers[incoming_message.header_size] =
                     (char *) malloc(strlen(buffer));
-            strcmp(incoming_message.headers[incoming_message.header_size],
+            strcpy(incoming_message.headers[incoming_message.header_size],
                     buffer);
+            
             incoming_message.header_size++;
         }
         
+        syslog(LOG_INFO, "Received headers");
+        
+        while(true) {
+            bytes_handled = read_line(client_fd, buffer, BUFFER_SIZE);
+            
+            if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
+               incoming_message.message_size == MAX_MESSAGES) {
+                break;
+            }
+            
+            incoming_message.message[incoming_message.message_size] =
+                    (char *) malloc(strlen(buffer));
+            strcpy(incoming_message.message[incoming_message.message_size],
+                    buffer);
+            
+            incoming_message.message_size++;
+        }
+        
+        syslog(LOG_INFO, "Received message");
+        
         int x;
         for(x = 0; x < incoming_message.header_size; x++) {
-            syslog(LOG_DEBUG, "Line: %s", incoming_message.headers[x]);
+            syslog(LOG_DEBUG, "Header: %s", incoming_message.headers[x]);
+        }
+        for(x = 0; x < incoming_message.message_size; x++) {
+            syslog(LOG_DEBUG, "Message: %s", incoming_message.message[x]);
         }
         
         for(x = incoming_message.header_size-1; x >= 0; x--) {
             free(incoming_message.headers[x]);
         }
+        for(x = incoming_message.message_size-1; x >= 0; x--) {
+            free(incoming_message.message[x]);
+        }
+        
+        free(incoming_message.headers);
+        free(incoming_message.message);
     }
     
     return NULL;
