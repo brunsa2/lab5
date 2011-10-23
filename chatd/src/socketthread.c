@@ -65,6 +65,7 @@ static void *receive_thread(void *thread) {
     int client_fd = ((thread_data *) thread)->socket;
     
     while(true) {
+        bool should_leave = false;
         message incoming_message;
         int bytes_handled;
         char buffer[BUFFER_SIZE];
@@ -84,9 +85,10 @@ static void *receive_thread(void *thread) {
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
                     incoming_message.header_size == MAX_HEADERS) {
+                should_leave == bytes_handled < 1;
                 break;
             }
-            
+                        
             incoming_message.headers[incoming_message.header_size] =
                     (char *) malloc(strlen(buffer));
             strcpy(incoming_message.headers[incoming_message.header_size],
@@ -96,7 +98,7 @@ static void *receive_thread(void *thread) {
     
         current_time = time(NULL);
         local_time = localtime(&current_time);
-        if(local_time != NULL) {
+        if(local_time != NULL && !should_leave) {
             time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
                     "%a, %d %b %Y %T %Z", local_time);
             if(time_buffer_bytes != 0) {
@@ -117,7 +119,8 @@ static void *receive_thread(void *thread) {
             bytes_handled = read_line(client_fd, buffer, BUFFER_SIZE);
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
-                incoming_message.message_size == MAX_MESSAGES) {
+                    incoming_message.message_size == MAX_MESSAGES) {
+                should_leave = bytes_handled < 1;
                 break;
             }
             
@@ -129,13 +132,9 @@ static void *receive_thread(void *thread) {
             incoming_message.message_size++;
         }
         
+        dispatch_message(&incoming_message);
+        
         int x;
-        for(x = 0; x < incoming_message.header_size; x++) {
-            syslog(LOG_DEBUG, "Header: %s", incoming_message.headers[x]);
-        }
-        for(x = 0; x < incoming_message.message_size; x++) {
-            syslog(LOG_DEBUG, "Message: %s", incoming_message.message[x]);
-        }
         
         for(x = incoming_message.header_size-1; x >= 0; x--) {
             free(incoming_message.headers[x]);
@@ -146,6 +145,10 @@ static void *receive_thread(void *thread) {
         
         free(incoming_message.headers);
         free(incoming_message.message);
+        
+        if(should_leave) {
+            break;
+        }
     }
     
     return NULL;
@@ -162,7 +165,6 @@ void *socket_thread(void *thread) {
     char buffer[BUFFER_SIZE];
     
     while(true) {
-    
         client_addr_size = sizeof(client_addr);
         lock(&accept_lock);
         client_fd = accept(server_fd, (struct sockaddr *) &client_addr,
@@ -178,7 +180,34 @@ void *socket_thread(void *thread) {
         
         start_joinable_thread(&receive_thread_id, receive_thread, &this_thread);
         
-        
+        for(;;) {
+            sleep(1);
+            syslog(LOG_INFO, "Checking for message, size is %d", ll_size(((thread_data *) thread)->message_queue));
+            if(ll_size(((thread_data *) thread)->message_queue)) {
+                message *sending_message = ll_get(((thread_data *) thread)->message_queue, 0);
+                int line_index;
+                syslog(LOG_INFO, "Message Headers");
+                for(line_index = 0; line_index < sending_message->header_size; line_index++) {
+                    //syslog(LOG_INFO, "%s", sending_message->headers[line_index]);
+                    if(write(client_fd, sending_message->headers[line_index], strlen(sending_message->headers[line_index])) != strlen(sending_message->headers[line_index])) {
+                        syslog(LOG_INFO, "Error writing");
+                    }
+                    free(sending_message->headers[line_index]);
+                }
+                syslog(LOG_INFO, "Message");
+                for(line_index = 0; line_index < sending_message->message_size; line_index++) {
+                    //syslog(LOG_INFO, "%s", sending_message->message[line_index]);
+                    if(write(client_fd, sending_message->message[line_index], strlen(sending_message->message[line_index])) != strlen(sending_message->message[line_index])) {
+                        syslog(LOG_INFO, "Error writing");
+                    }
+                    free(sending_message->message[line_index]);
+                }
+                free(sending_message->headers);
+                free(sending_message->message);
+                free(sending_message);
+                ll_remove(((thread_data *) thread)->message_queue, 0);
+            }
+        }
         
         join_thread(&receive_thread_id);
         

@@ -33,7 +33,7 @@
 
 typedef struct {
     int socket;
-    struct linkedList message_queue;
+    struct linkedList *message_queue;
 } thread_data;
 
 typedef struct {
@@ -46,5 +46,6 @@ typedef struct {
 #include "socketthread.h"
 
 void signal_handler(int);
+void dispatch_message(message *);
 
 #endif

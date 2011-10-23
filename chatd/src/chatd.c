@@ -194,14 +194,64 @@ static void chatd() {
         thread_id thread;
         memset(&new_thread, 0, sizeof(new_thread));
         new_thread.socket = sock_fd;
-        ll_init(&(new_thread.message_queue));
+        new_thread.message_queue =
+                (struct linkedList *) malloc(sizeof(struct linkedList));
+        ll_init(new_thread.message_queue);
         ll_add(&thread_list, &new_thread, sizeof(new_thread));
         syslog(LOG_INFO, "Initialized thread %d", thread_index);
         start_thread(&thread, socket_thread,
                 ll_get(&thread_list, thread_index));
     }
     
-    for(;;) sleep(10);
+    for(;;) {
+        sleep(10);
+        /*struct linkedListIterator *iterator;
+        iterator = ll_getIterator(&thread_list);
+        int i = 0;
+        syslog(LOG_INFO, "Linked list has size %d", ll_size(&thread_list));
+        while(ll_hasNext(iterator)) {
+            thread_data *thread;
+            thread = (thread_data *) ll_next(iterator);
+            ll_add(thread->message_queue, "Message for thread", strlen("Message for thread"));
+            syslog(LOG_INFO, "Woot! Linked list %d", ++i);
+        }
+        free(iterator);*/
+    }
+}
+
+void dispatch_message(message *dispatched_message) {
+    struct linkedListIterator *iterator;
+    iterator = ll_getIterator(&thread_list);
+    while(ll_hasNext(iterator)) {
+        thread_data *thread = ll_next(iterator);
+        message *new_message;
+        int line_index;
+        
+        new_message = (message *) malloc(sizeof(message));
+        if(new_message == NULL) {
+            continue;
+        }
+        new_message->header_size = dispatched_message->header_size;
+        new_message->message_size = dispatched_message->message_size;
+        new_message->headers = (char **) malloc(MAX_HEADERS * sizeof(char *));
+        new_message->message = (char **) malloc(MAX_MESSAGES * sizeof(char *));
+        
+        //syslog(LOG_INFO, "Dispatching message with %d headers and %d messages", dispatched_message->header_size, dispatched_message->message_size);
+        
+        for(line_index = 0; line_index < dispatched_message->header_size; line_index++) {
+            new_message->headers[line_index] = (char *) malloc(strlen(dispatched_message->headers[line_index]));
+            strcpy(new_message->headers[line_index], dispatched_message->headers[line_index]);
+        }
+        for(line_index = 0; line_index < dispatched_message->message_size; line_index++) {
+            new_message->message[line_index] = (char *) malloc(strlen(dispatched_message->message[line_index]));
+            strcpy(new_message->message[line_index], dispatched_message->message[line_index]);
+        }
+        
+        ll_add(thread->message_queue, new_message, sizeof(message));
+        
+        free(new_message);
+    }
+    free(iterator);
 }
 
 void signal_handler(int signal) {
