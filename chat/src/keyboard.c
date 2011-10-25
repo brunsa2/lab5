@@ -7,16 +7,54 @@
  * Keyboard buffer system
  */
 
-#include <stdio.h>
-
 #include "keyboard.h"
 
+#define KB_BUFFER_SIZE 16
+#define KB_FIRST_TAIL 0
+#define KB_FIRST_HEAD 1
+
+#define adjusted_head(head) (head == 0 ? 16 : head)
+
+mutex_id kb_buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static char kb_buffer[KB_BUFFER_SIZE];
+static int kb_buffer_head = KB_FIRST_HEAD, kb_buffer_tail = KB_FIRST_TAIL;
+
 void *kb_thread(void *argument) {
-    int x;
-    for(x = 0; x < 5; x++) {
-        printf("Keyboard\n");
-        usleep(50000);
+    char next_character;
+    while(true) {
+        next_character = getchar();
+        lock(&kb_buffer_mutex);
+        while(kb_buffer_head == kb_buffer_tail);
+        kb_buffer[kb_buffer_head] = next_character;
+        kb_buffer_head = (kb_buffer_head + 1) % KB_BUFFER_SIZE;
+        unlock(&kb_buffer_mutex);
     }
     
     return NULL;
+}
+
+bool kb_has_key(void) {
+    lock(&kb_buffer_mutex);
+    if(adjusted_head(kb_buffer_head) - kb_buffer_tail == 1) {
+        unlock(&kb_buffer_mutex);
+        return false;
+    } else {
+        unlock(&kb_buffer_mutex);
+        return true;
+    }
+}
+
+char kb_get_key(void) {
+    char next_key;
+    lock(&kb_buffer_mutex);
+    if(!kb_has_key()) {
+        unlock(&kb_buffer_mutex);
+        return '\0';
+    } else {
+        next_key = kb_buffer[kb_buffer_tail];
+        kb_buffer_tail = (kb_buffer_head + 1) & KB_BUFFER_SIZE;
+        unlock(&kb_buffer_mutex);
+        return next_key;
+    }
 }

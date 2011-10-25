@@ -7,14 +7,24 @@
  * Main controller thread
  */
 
-#include <stdio.h>
-
 #include "controller.h"
 
 void ctrl_thread(void) {
-    int x;
-    for(x = 0; x < 5; x++) {
-        printf("Controller\n");
-        usleep(50000);
-    }
+    
+}
+
+void clock_tick(void) {
+    
+}
+
+void string_entered(void) {
+    
+}
+
+void network_ready(void) {
+    
+}
+
+void message_arrived(void) {
+    
 }

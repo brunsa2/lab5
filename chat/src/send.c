@@ -7,16 +7,12 @@
  * Network send thread
  */
 
-#include <stdio.h>
-
 #include "send.h"
 
-void *send_thread(void *argument) {
-    int x;
-    for(x = 0; x < 5; x++) {
-        printf("Send\n");
-        usleep(50000);
-    }
-    
+void *send_thread(void *argument) {    
     return NULL;
+}
+
+void send_message(message *sending_message) {
+    
 }

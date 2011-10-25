@@ -7,16 +7,24 @@
  * Tick counting thread
  */
 
-#include <stdio.h>
-
 #include "tick.h"
 
+#define MICROSECONDS_BETWEEN_CLOCK_UPDATE 1000000
+
+static start_ticks, elapsed_ticks;
+
 void *tick_thread(void *argument) {
-    int x;
-    for(x = 0; x < 5; x++) {
-        printf("Tick\n");
-        usleep(50000);
+    start_ticks = time(NULL);
+    
+    while(true) {
+        elapsed_ticks = time(NULL) - start_ticks;
+        usleep(MICROSECONDS_BETWEEN_CLOCK_UPDATE);
+        clock_tick();
     }
     
     return NULL;
+}
+
+int get_elapsed_ticks(void) {
+    return elapsed_ticks;
 }
