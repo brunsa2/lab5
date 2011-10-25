@@ -3,7 +3,7 @@
 \begin{document}
 
 \title{CS 3841 Lab 5: Let's Chat}
-\author{Jeff Stubler & Matt Edwards}
+\author{Jeff Stubler \& Matt Edwards}
 \date{24 October 2011}
 \maketitle
 
@@ -19,14 +19,35 @@ From this lab, we learned that programming sockets in C is a lot more difficult 
 \section*{Time Analysis}
 In total Jeff spent about 15 hours working on this and Matt spent about 10. Most of Jeff's time was spent on the server and Matt's was divided among learning how to use ncurses and implementing the UI.
 
+\section*{Chatd screenshots}
+Figures~\ref{chatd-send} and \ref{chatd-receive} show telnet sessions with the chat server, sending and receiving messages or only sending, respectively. Using telnet, the headers given with
+the different message types can be seen that are normally hidden by the UI for the chat system.
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[scale=0.2]{send.png}
+\end{center}
+\caption{Telnet to chatd, sending and receiving}
+\label{chatd-send}
+\end{figure}
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[scale=0.2]{receive.png}
+\end{center}
+\caption{Telnet to chatd, sending only}
+\label{chatd-receive}
+\end{figure}
+
 \section*{Conclusion}
-In this lab, we successfully constructed code using POSIX threads, protected against race conditions, communicated using sockets, and implemented a GUI with ncurses. We learned quite a bit from this lab and spent a decent amount of time making sure everything worked corerctly.
+In this lab, we successfully constructed code using POSIX threads, protected against race conditions, communicated using sockets, and implemented a GUI with ncurses. We learned quite a bit from this lab and spent a decent amount of time making sure everything worked correctly.
 
 \section*{Appendix: Source code}
 
 \subsection*{controller.c}
 
 \begin{verbatim}
+
 
 
 \end{verbatim}
