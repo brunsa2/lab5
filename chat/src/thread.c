@@ -9,6 +9,9 @@
 
 #include "thread.h"
 
+#define fatal_shutdown(message) fprintf(stderr, "%s\n", message); \
+        exit(EXIT_FAILURE);
+
 /* TODO: Look further at thread priority */
 
 void start_thread(pthread_t *thread, void *(* thread_function)(void *),
@@ -36,5 +39,30 @@ void start_thread(pthread_t *thread, void *(* thread_function)(void *),
     thread_error_code = pthread_attr_destroy(&attributes);
     if(thread_error_code != 0) {
         fatal_shutdown("Error destroying attributes");
+    }
+}
+
+void initialize_mutex(mutex_id *mutex) {
+    int mutex_error_code;
+    mutex_error_code = pthread_mutex_init(mutex, NULL);
+    if(mutex_error_code != 0) {
+        fatal_shutdown("Error initializing mutex");
+    }
+}
+
+void lock(mutex_id *mutex) {
+    pthread_mutex_lock(mutex);
+}
+
+void unlock(mutex_id *mutex) {
+    pthread_mutex_unlock(mutex);
+}
+
+void destroy_mutex(mutex_id *mutex) {
+    int mutex_error_code;
+    unlock(mutex);
+    mutex_error_code = pthread_mutex_destroy(mutex);
+    if(mutex_error_code != 0) {
+        fatal_shutdown("Error destroying mutex");
     }
 }

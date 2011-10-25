@@ -10,6 +10,15 @@
 #ifndef CONTROLLER
 #define CONTROLLER
 
+#include <stdio.h>
+
+#include "tick.h"
+#include "keyboard.h"
+
 void ctrl_thread(void);
+void clock_tick(void);
+void string_entered(void);
+void network_ready(void);
+void message_arrived(void);
 
 #endif

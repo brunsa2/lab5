@@ -10,6 +10,11 @@
 #ifndef NETWORK_RECEIVE
 #define NETWORK_RECEIVE
 
+#include <stdlib.h>
+
+#include "network.h"
+
 void *receive_thread(void *);
+message *get_message(void);
 
 #endif
