@@ -25,7 +25,7 @@ void start_thread(pthread_t *thread, void *(* thread_function)(void *),
     }
     
     thread_error_code = pthread_attr_setdetachstate(&attributes,
-                                                    PTHREAD_CREATE_DETACHED);
+            PTHREAD_CREATE_DETACHED);
     if(thread_error_code != 0) {
         fatal_shutdown("Error setting thread detach state attribute");
     }
@@ -43,7 +43,7 @@ void start_thread(pthread_t *thread, void *(* thread_function)(void *),
 }
 
 void start_joinable_thread(pthread_t *thread, void *(* thread_function)(void *),
-                           void *argument) {
+            void *argument) {
     int thread_error_code;
     
     thread_error_code = pthread_create(thread, NULL, thread_function, argument);

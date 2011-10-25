@@ -2,13 +2,13 @@
  * Jeff Stubler
  * CS 3841
  * Lab 5 -- UNIX chat program
- * 14 October 2011
+ * 15 October 2011
  *
- * Network startup thread
+ * Main thread for each socket
  */
 
-#ifndef NETWORK
-#define NETWORK
+#ifndef SOCKET_THREAD
+#define SOCKET_THREAD
 
 #include <stdio.h>
 #include <syslog.h>
@@ -23,18 +23,12 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#include <string.h>
+#include <time.h>
 
+#include "chatd.h"
 #include "thread.h"
-#include "main.h"
 
-typedef struct {
-    char *username;
-    char *message_text;
-} message;
-
-#include "send.h"
-#include "receive.h"
-
-void *network_thread(void *);
+void *socket_thread(void *);
 
 #endif

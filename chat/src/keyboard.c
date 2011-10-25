@@ -15,6 +15,7 @@
 
 #define adjusted_head(head) (head == 0 ? 16 : head)
 
+//extern ncurses_initialized;
 mutex_id kb_buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static char kb_buffer[KB_BUFFER_SIZE];
@@ -22,6 +23,7 @@ static int kb_buffer_head = KB_FIRST_HEAD, kb_buffer_tail = KB_FIRST_TAIL;
 
 void *kb_thread(void *argument) {
     char next_character;
+    //while(!ncurses_initialized);
     while(true) {
         next_character = getchar();
         lock(&kb_buffer_mutex);

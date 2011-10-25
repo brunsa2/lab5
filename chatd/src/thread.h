@@ -20,7 +20,7 @@ typedef pthread_mutex_t mutex_id;
 
 void start_thread(pthread_t *, void *(* thread_function)(void *), void *);
 void start_joinable_thread(pthread_t *, void *(* thread_function)(void *),
-                           void *);
+        void *);
 void join_thread(pthread_t *);
 void initialize_mutex(mutex_id *);
 void lock(mutex_id *);
