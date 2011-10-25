@@ -15,17 +15,18 @@ WINDOW * w_user;
 WINDOW * w_time;
 
 extern login_info login;
+int ncurses_initialized;
 
 void *ui_thread(void *argument) {
     char str[80];
-    char tick[10];
     char new_user[20];
-    char[20] time;
-    char[20] user;
-    char[80] message;
-    int row, col, y, x, chat_line, user_line, buffer;
+    char time[20];
+    char user[20];
+    char message[80];
+    int row, col, y, x, chat_line, user_line, buffer, tick;
 
     initscr();				/* start the curses mode */
+    ncurses_initialized = 1;
     start_color();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
     getmaxyx(stdscr,row,col);		/* get the number of rows and columns */
@@ -63,12 +64,12 @@ void *ui_thread(void *argument) {
     while(true){
         refresh_all();
         
-        if(has_keys() == true){
+        if(kb_has_key() == true){
             buffer = 0;
 	    //placeholder until keyboard.c code is implemented
-            while(buffer < 80 && kb_buffer[buffer] != "\r\n") {
-		mvwaddch(w_input,1, buffer+1, kb_buffer[buffer]);
-		strcat(str,kb_buffer[buffer]);
+            while(buffer < 80 && kb_has_key() == true) {
+		str[buffer] = kb_get_key();
+		mvwaddch(w_input,1, buffer+1, str[buffer]);
                 buffer++;
 		refresh_all();
             }
@@ -88,14 +89,19 @@ void *ui_thread(void *argument) {
         }
 
 	//placeholder
-	if(has_new_user() == true){
+/*	if(has_new_user() == true){
 	    strcpy(new_user, get_user());
 	    mvwprintw(w_user, user_line, 1, "%s", new_user);
 	    user_line++;
+	    attron(COLOR_PAIR(1));
+	    mvwprintw(w_chat, chat_line, 1, "%s has joined the chat", new_user);  
+	    attroff(COLOR_PAIR(1));
+	    chat_line++; 
 	    refresh_all();
 	}
 
 	//placeholder until has_message is implemented in some form
+/*
 	if(has_message() == true){
 	    //placeholders
 	    strcpy(time, get_time());
@@ -109,15 +115,11 @@ void *ui_thread(void *argument) {
 	    mvwprintw(w_chat, chat_line, 1, "[%s]<%s> %s", time, user, message);  
 	    chat_line++;  
 	}
-	
+	*/
 	//placeholder
-	strcpy(tick, get_tick());
+	tick = get_elapsed_ticks();
 	mvwprintw(w_time, 1, 1, "%i", tick);
     }
-
-    endwin();
-
-    return 0;
 }
 
 void refresh_all(){
