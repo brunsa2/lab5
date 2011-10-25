@@ -9,16 +9,7 @@
 
 #include "send.h"
 
-void *send_thread(void *argument) {
-    int sock_fd = (int) ((void *) argument);
-    
-    write(sock_fd,
-          "Join\r\rUsername: brunsa2\r\n\r\n\r\n",
-          strlen("Join\r\rUsername: brunsa2\r\n\r\n\r\n"));
-    write(sock_fd,
-          "Message\r\nUsername: brunsa2\r\n\r\nHi! How are you?\r\n\r\n",
-          strlen("Message\r\nUsername: brunsa2\r\n\r\nHi! How are you?\r\n\r\n"));
-    
+void *send_thread(void *argument) {    
     return NULL;
 }
 

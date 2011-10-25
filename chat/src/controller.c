@@ -10,11 +10,7 @@
 #include "controller.h"
 
 void ctrl_thread(void) {
-    int x = 0;
-    for(x = 0; x < 5; x++) {
-        sleep(10);
-        printf("Alive\n");
-    }
+    
 }
 
 void clock_tick(void) {
