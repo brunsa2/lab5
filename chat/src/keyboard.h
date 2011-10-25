@@ -12,11 +12,12 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "thread.h"
 
 void *kb_thread(void *);
-bool has_key(void);
-char *get_string(void);
+bool kb_has_key(void);
+char kb_get_key(void);
 
 #endif
