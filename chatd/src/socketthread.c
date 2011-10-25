@@ -88,9 +88,12 @@ static void *receive_thread(void *thread) {
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
                     incoming_message.header_size == MAX_HEADERS) {
-                should_leave == bytes_handled < 1;
+                syslog(LOG_INFO, "Received header %s", buffer);
+                //should_leave == bytes_handled < 1;
                 break;
             }
+            
+            syslog(LOG_INFO, "Received header %s", buffer);
             
             strncpy(username_buffer, buffer, strlen("Username: "));
             if(strcmp(username_buffer, "Username: ") == 0) {
@@ -111,9 +114,12 @@ static void *receive_thread(void *thread) {
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
                     incoming_message.message_size == MAX_MESSAGES) {
-                should_leave = bytes_handled < 1;
+                syslog(LOG_INFO, "Received message %s", buffer);
+                //should_leave = bytes_handled < 1;
                 break;
             }
+            
+            syslog(LOG_INFO, "Received message %s", buffer);
             
             incoming_message.message[incoming_message.message_size] =
                     (char *) malloc(strlen(buffer));

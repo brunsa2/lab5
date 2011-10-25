@@ -16,13 +16,14 @@
 /* Variables for parsing command line arguments */
 extern int optind, opterr, optopt;
 extern char *optarg;
+extern int network_error_code;
 
 login_info login;
 
 static void print_usage_and_exit_with_code(int exit_status) {
     fprintf(stderr, "Usage: chat [OPTION]... host\n"
             "Talk among other users connected to a chat server.\n\n"
-            "-a\t\tJoin anonymously without greeting message\n"
+            /*"-a\t\tJoin anonymously without greeting message\n"*/
             "-h, --help\tDisplay this help and exit\n"
             "-p\t\tSpecify port to connect to server on\n"
             "-u\t\tSet username to be displayed to chat members\n\n");
@@ -83,7 +84,14 @@ int main(int argc, char **argv) {
     start_thread(&kb_thread_id, kb_thread, NULL);
     start_thread(&tick_thread_id, tick_thread, NULL);
     start_thread(&ui_thread_id, ui_thread, NULL);
+    printf("Connecting...\n");
     start_thread(&network_thread_id, network_thread, NULL);
+    
+    sleep(2);
+    if(network_error_code != 0) {
+        printf("Could not connect\nError code %d\n", network_error_code);
+        exit(EXIT_FAILURE);
+    }
     
     ctrl_thread();
     
