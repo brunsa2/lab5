@@ -34,6 +34,7 @@
 typedef struct {
     int socket;
     struct linkedList *message_queue;
+    int should_shutdown;
 } thread_data;
 
 typedef struct {

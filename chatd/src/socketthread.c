@@ -69,9 +69,11 @@ static void *receive_thread(void *thread) {
         message incoming_message;
         int bytes_handled;
         char buffer[BUFFER_SIZE];
+        char username_buffer[BUFFER_SIZE], username[BUFFER_SIZE], *username_position;
         time_t current_time;
         size_t time_buffer_bytes;
         struct tm *local_time;
+        int do_not_dispatch_incoming_message = 0, line_index;
         
         incoming_message.header_size = 0;
         incoming_message.headers =
@@ -81,6 +83,7 @@ static void *receive_thread(void *thread) {
                 (char **) malloc(MAX_MESSAGES * sizeof(char *));
         
         while(true) {
+            memset(buffer, 0, BUFFER_SIZE);
             bytes_handled = read_line(client_fd, buffer, BUFFER_SIZE);
             
             if(bytes_handled < 1 || strcmp("\r\n", buffer) == 0 ||
@@ -88,31 +91,19 @@ static void *receive_thread(void *thread) {
                 should_leave == bytes_handled < 1;
                 break;
             }
+            
+            strncpy(username_buffer, buffer, strlen("Username: "));
+            if(strcmp(username_buffer, "Username: ") == 0) {
+                username_position = buffer + strlen("Username: ");
+                strncpy(username, username_position, strlen(username_position) - 2);
+                
+            }
                         
             incoming_message.headers[incoming_message.header_size] =
                     (char *) malloc(strlen(buffer));
             strcpy(incoming_message.headers[incoming_message.header_size],
                    buffer);
             incoming_message.header_size++;
-        }
-    
-        current_time = time(NULL);
-        local_time = localtime(&current_time);
-        if(local_time != NULL && !should_leave) {
-            time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
-                    "%a, %d %b %Y %T %Z", local_time);
-            if(time_buffer_bytes != 0) {
-                incoming_message.headers[incoming_message.header_size] =
-                        (char *) malloc(strlen("Received-at: ") +
-                        strlen(buffer) + strlen("\r\r"));
-                strcpy(incoming_message.headers[incoming_message.header_size],
-                        "Received-at: ");
-                strcat(incoming_message.headers[incoming_message.header_size],
-                        buffer);
-                strcat(incoming_message.headers[incoming_message.header_size],
-                        "\r\n");
-                incoming_message.header_size++;
-            }
         }
         
         while(true) {
@@ -132,22 +123,135 @@ static void *receive_thread(void *thread) {
             incoming_message.message_size++;
         }
         
-        dispatch_message(&incoming_message);
-        
-        int x;
-        
-        for(x = incoming_message.header_size-1; x >= 0; x--) {
-            free(incoming_message.headers[x]);
+        current_time = time(NULL);
+        local_time = localtime(&current_time);
+        if(local_time != NULL && !should_leave) {
+            time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
+                                         "%a, %d %b %Y %T %Z", local_time);
+            if(time_buffer_bytes != 0) {
+                incoming_message.headers[incoming_message.header_size] =
+                (char *) malloc(strlen("Received-at: ") +
+                                strlen(buffer) + strlen("\r\r") + 1);
+                strcpy(incoming_message.headers[incoming_message.header_size],
+                       "Received-at: ");
+                strcat(incoming_message.headers[incoming_message.header_size],
+                       buffer);
+                strcat(incoming_message.headers[incoming_message.header_size],
+                       "\r\n");
+                incoming_message.header_size++;
+            }
         }
-        for(x = incoming_message.message_size-1; x >= 0; x--) {
-            free(incoming_message.message[x]);
+        
+        if(incoming_message.header_size > 0 && strcmp(incoming_message.headers[0], "Join\r\n") == 0) {
+            message *join_message = malloc(sizeof(message));
+            join_message->header_size = 1;
+            join_message->message_size = 1;
+            join_message->headers = (char **) malloc(MAX_HEADERS * sizeof(char *));
+            join_message->message = (char **) malloc(MAX_MESSAGES * sizeof(char *));
+            join_message->headers[0] = (char *) malloc(strlen("Message\r\n") + 1);
+            strcpy(join_message->headers[0], "Message\r\n");
+            join_message->message[0] = (char *) malloc(BUFFER_SIZE);
+            strcpy(join_message->message[0], username);
+            strcat(join_message->message[0], " has joined the chat\r\n");
+            
+            if(local_time != NULL && !should_leave) {
+                time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
+                                             "%a, %d %b %Y %T %Z", local_time);
+                if(time_buffer_bytes != 0) {
+                    join_message->headers[join_message->header_size] =
+                    (char *) malloc(strlen("Received-at: ") +
+                                    strlen(buffer) + strlen("\r\r") + 1);
+                    strcpy(join_message->headers[join_message->header_size],
+                           "Received-at: ");
+                    strcat(join_message->headers[join_message->header_size],
+                           buffer);
+                    strcat(join_message->headers[join_message->header_size],
+                           "\r\n");
+                    join_message->header_size++;
+                }
+            }
+            
+            dispatch_message(join_message);
+            do_not_dispatch_incoming_message = 1;
+            
+            for(line_index = 0; line_index < join_message->header_size; line_index++) {
+                free(join_message->headers[line_index]);
+            }
+            for(line_index = 0; line_index < join_message->message_size; line_index++) {
+                free(join_message->message[line_index]);
+            }
+            free(join_message->headers);
+            free(join_message->message);
+            free(join_message);
         }
         
+        if(incoming_message.header_size > 0 && strcmp(incoming_message.headers[0], "Leave\r\n") == 0) {
+            message *leave_message = malloc(sizeof(message));
+            leave_message->header_size = 1;
+            leave_message->message_size = 1;
+            leave_message->headers = (char **) malloc(MAX_HEADERS * sizeof(char *));
+            leave_message->message = (char **) malloc(MAX_MESSAGES * sizeof(char *));
+            leave_message->headers[0] = (char *) malloc(strlen("Message\r\n") + 1);
+            strcpy(leave_message->headers[0], "Message\r\n");
+            leave_message->message[0] = (char *) malloc(BUFFER_SIZE);
+            strcpy(leave_message->message[0], username);
+            strcat(leave_message->message[0], " has left the chat\r\n");
+            
+            if(local_time != NULL && !should_leave) {
+                time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
+                                             "%a, %d %b %Y %T %Z", local_time);
+                if(time_buffer_bytes != 0) {
+                    leave_message->headers[leave_message->header_size] =
+                    (char *) malloc(strlen("Received-at: ") +
+                                    strlen(buffer) + strlen("\r\r") + 1);
+                    strcpy(leave_message->headers[leave_message->header_size],
+                           "Received-at: ");
+                    strcat(leave_message->headers[leave_message->header_size],
+                           buffer);
+                    strcat(leave_message->headers[leave_message->header_size],
+                           "\r\n");
+                    leave_message->header_size++;
+                }
+            }
+            
+            dispatch_message(leave_message);
+            do_not_dispatch_incoming_message = 1;
+            
+            for(line_index = 0; line_index < leave_message->header_size; line_index++) {
+                free(leave_message->headers[line_index]);
+            }
+            for(line_index = 0; line_index < leave_message->message_size; line_index++) {
+                free(leave_message->message[line_index]);
+            }
+            free(leave_message->headers);
+            free(leave_message->message);
+            free(leave_message);
+        }
+        
+        if(incoming_message.header_size > 0 && strcmp(incoming_message.headers[0], "Leave\r\n") == 0) {
+            ((thread_data *) thread)->should_shutdown = 1;
+        }
+        
+        if(!do_not_dispatch_incoming_message) {
+            dispatch_message(&incoming_message);
+        }
+        do_not_dispatch_incoming_message = 0;
+        
+        for(line_index = 0; line_index < incoming_message.header_size; line_index++) {
+            free(incoming_message.headers[line_index]);
+        }
+        for(line_index = 0; line_index < incoming_message.message_size; line_index++) {
+            free(incoming_message.message[line_index]);
+        }
         free(incoming_message.headers);
         free(incoming_message.message);
         
         if(should_leave) {
             break;
+        }
+        
+        if(((thread_data *) thread)->should_shutdown == 1) {
+            return NULL;
         }
     }
     
@@ -159,10 +263,12 @@ void *socket_thread(void *thread) {
     struct sockaddr_storage client_addr;
     int client_addr_size;
     int client_fd;
-    thread_data this_thread;
     thread_id send_thread_id, receive_thread_id;
     int bytes_handled;
     char buffer[BUFFER_SIZE];
+    time_t current_time;
+    size_t time_buffer_bytes;
+    struct tm *local_time;
     
     while(true) {
         client_addr_size = sizeof(client_addr);
@@ -174,40 +280,65 @@ void *socket_thread(void *thread) {
             continue;
         }
         unlock(&accept_lock);
+
+        ((thread_data *) thread)->socket = client_fd;
         
-        memcpy(&this_thread, thread, sizeof(thread));
-        this_thread.socket = client_fd;
+        start_joinable_thread(&receive_thread_id, receive_thread, thread);
         
-        start_joinable_thread(&receive_thread_id, receive_thread, &this_thread);
+        ll_clear(((thread_data *) thread)->message_queue);
         
         for(;;) {
             sleep(1);
-            syslog(LOG_INFO, "Checking for message, size is %d", ll_size(((thread_data *) thread)->message_queue));
             if(ll_size(((thread_data *) thread)->message_queue)) {
                 message *sending_message = ll_get(((thread_data *) thread)->message_queue, 0);
+                
+                current_time = time(NULL);
+                local_time = localtime(&current_time);
+                if(local_time != NULL) {
+                    time_buffer_bytes = strftime(buffer, BUFFER_SIZE,
+                                                 "%a, %d %b %Y %T %Z", local_time);
+                    if(time_buffer_bytes != 0) {
+                        sending_message->headers[sending_message->header_size] =
+                        (char *) malloc(strlen("Echoed-at: ") +
+                                        strlen(buffer) + strlen("\r\r"));
+                        strcpy(sending_message->headers[sending_message->header_size],
+                               "Echoed-at: ");
+                        strcat(sending_message->headers[sending_message->header_size],
+                               buffer);
+                        strcat(sending_message->headers[sending_message->header_size],
+                               "\r\n");
+                        sending_message->header_size++;
+                    }
+                }
+                
                 int line_index;
-                syslog(LOG_INFO, "Message Headers");
                 for(line_index = 0; line_index < sending_message->header_size; line_index++) {
-                    //syslog(LOG_INFO, "%s", sending_message->headers[line_index]);
                     if(write(client_fd, sending_message->headers[line_index], strlen(sending_message->headers[line_index])) != strlen(sending_message->headers[line_index])) {
                         syslog(LOG_INFO, "Error writing");
                     }
                     free(sending_message->headers[line_index]);
                 }
+                write(client_fd, "\r\n", strlen("\r\n"));
                 syslog(LOG_INFO, "Message");
                 for(line_index = 0; line_index < sending_message->message_size; line_index++) {
-                    //syslog(LOG_INFO, "%s", sending_message->message[line_index]);
                     if(write(client_fd, sending_message->message[line_index], strlen(sending_message->message[line_index])) != strlen(sending_message->message[line_index])) {
                         syslog(LOG_INFO, "Error writing");
                     }
                     free(sending_message->message[line_index]);
                 }
+                write(client_fd, "\r\n", strlen("\r\n"));
                 free(sending_message->headers);
                 free(sending_message->message);
                 free(sending_message);
                 ll_remove(((thread_data *) thread)->message_queue, 0);
             }
+            
+            if(((thread_data *) thread)->should_shutdown == 1) {
+                break;
+            }
         }
+        
+        ll_clear(((thread_data *) thread)->message_queue);
         
         join_thread(&receive_thread_id);
         

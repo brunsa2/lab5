@@ -194,6 +194,7 @@ static void chatd() {
         thread_id thread;
         memset(&new_thread, 0, sizeof(new_thread));
         new_thread.socket = sock_fd;
+        new_thread.should_shutdown = 0;
         new_thread.message_queue =
                 (struct linkedList *) malloc(sizeof(struct linkedList));
         ll_init(new_thread.message_queue);
@@ -205,17 +206,6 @@ static void chatd() {
     
     for(;;) {
         sleep(10);
-        /*struct linkedListIterator *iterator;
-        iterator = ll_getIterator(&thread_list);
-        int i = 0;
-        syslog(LOG_INFO, "Linked list has size %d", ll_size(&thread_list));
-        while(ll_hasNext(iterator)) {
-            thread_data *thread;
-            thread = (thread_data *) ll_next(iterator);
-            ll_add(thread->message_queue, "Message for thread", strlen("Message for thread"));
-            syslog(LOG_INFO, "Woot! Linked list %d", ++i);
-        }
-        free(iterator);*/
     }
 }
 
@@ -235,8 +225,6 @@ void dispatch_message(message *dispatched_message) {
         new_message->message_size = dispatched_message->message_size;
         new_message->headers = (char **) malloc(MAX_HEADERS * sizeof(char *));
         new_message->message = (char **) malloc(MAX_MESSAGES * sizeof(char *));
-        
-        //syslog(LOG_INFO, "Dispatching message with %d headers and %d messages", dispatched_message->header_size, dispatched_message->message_size);
         
         for(line_index = 0; line_index < dispatched_message->header_size; line_index++) {
             new_message->headers[line_index] = (char *) malloc(strlen(dispatched_message->headers[line_index]));
