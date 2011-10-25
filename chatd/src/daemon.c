@@ -7,20 +7,42 @@
  * Daemonizing function to start server running
  */
 
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-
 #include "daemon.h"
 
-int become_daemon(void) {
-    int maximum_fd, current_fd;
+#define PID_STRING_LENGTH 16
+
+#define fatal_shutdown(message) syslog(LOG_CRIT, message); \
+        exit(EXIT_FAILURE);
+#define nonfatal_shutdown(message) syslog(LOG_NOTICE, message); \
+        exit(EXIT_SUCCESS);
+
+int become_daemon(void (* sig_handler)(int)) {
+    struct sigaction sigact;
+    int maximum_fd, current_fd, lock_fd;
+    char pid_string[PID_STRING_LENGTH];
+    
+    openlog("chatd", LOG_CONS, LOG_USER);
+    
+    syslog(LOG_INFO, "This is chatd. 14 October 2011 Jeff Stubler for CS 3841 "
+            "UNIX chat system lab 5");
+    
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = SA_RESTART;
+    sigact.sa_handler = sig_handler;
+    if(sigaction(SIGHUP, &sigact, NULL) == -1) {
+        fatal_shutdown("Error setting SIGHUP signal handler");
+    }
+    if(sigaction(SIGTERM, &sigact, NULL) == -1) {
+        fatal_shutdown("Error setting SIGTERM signal handler");
+    }
+    if(signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+        fatal_shutdown("Error ignoring SIGPIPE signal");
+    }
     
     /* Become a background process */
     switch(fork()) {
         case -1:
-            return -1;
+            fatal_shutdown("Error becomming background process");
         case 0:
             /* Child process should continue */
             break;
@@ -30,13 +52,13 @@ int become_daemon(void) {
     
     /* Become leader of new session */
     if(setsid() == -1) {
-        return -1;
+        fatal_shutdown("Error becomming session leader");
     }
     
     /* Ensure that we are not leader of new session */
     switch(fork()) {
         case -1:
-            return -1;
+            fatal_shutdown("Error breaking from leadership of new session");
         case 0:
             /* Child process should continue */
             break;
@@ -44,9 +66,11 @@ int become_daemon(void) {
             _exit(EXIT_SUCCESS);
     }
     
+    syslog(LOG_INFO, "chatd is now running in the background");
+    
     /* Clear file mode creation mask and chdir to root */
-    umask(0);
-    chdir("/");
+    umask(0027);
+    //chdir("/");
     
     /* Close all files */
     maximum_fd = sysconf(_SC_OPEN_MAX);
@@ -63,14 +87,31 @@ int become_daemon(void) {
     current_fd = open("/dev/null", O_RDWR);
     
     if(current_fd != STDIN_FILENO) {
-        return -1;
+        fatal_shutdown("Cannot attach stdin to /dev/null");
     }
     if(dup2(STDIN_FILENO, STDOUT_FILENO) != STDOUT_FILENO) {
-        return -1;
+        fatal_shutdown("Cannot attach stdout to /dev/null");
     }
     if(dup2(STDIN_FILENO, STDERR_FILENO) != STDERR_FILENO) {
-        return -1;
+        fatal_shutdown("Cannot attach stderr to /dev/null");
     }
+    
+    syslog(LOG_INFO, "chatd is ready to lock system");
+    
+    /* Create lock file */
+    lock_fd = open("chatd.lock", O_RDWR | O_CREAT, 0640);
+    if(lock_fd < 0) {
+        fatal_shutdown("Cannot open lock file");
+    }
+    if(lockf(lock_fd, F_TLOCK, 0) < 0) {
+        nonfatal_shutdown("chatd is already running---this chatd will stop");
+    }
+    
+    sprintf(pid_string, "%d\n", getpid());
+    write(lock_fd, pid_string, strlen(pid_string));
+    
+    syslog(LOG_INFO, "chatd is locked");
+    syslog(LOG_INFO, "chatd has started successfully");
     
     return 0;
 }
