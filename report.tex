@@ -11,13 +11,23 @@
 We started this lab by discussing how we would design and implement it based on the given requirements. It was determined that new threads would be created to handle the UI, keyboard, time ticking, sending messages, receiving messages, and a controller thread to handle all of these. We split the work so Jeff would spend most of his time on the keyboard, time ticking, and sending and receiving of messages, while Matt would work primarily on the UI thread.
 
 \section*{Things that went right and wrong}
-Overall, this lab went well. In particular, two parts of this lab went well - the server and the UI implementation. Although the server took a considerable amount of time, the final result turned out quite well. Aside from the time commitment, nothing there was nothing that was too problematic in this lab. That being said, it did take some trial and error to create a UI with the desired panels and windows.
+Overall, this lab went well but we did not achieve the desired results. In particular, two parts of this lab went well - the server and the UI implementation. Despite this, we were not able to fully implement the lab. Due to the time constraints, being overly ambitious, and unforeseen bugs, we were not able to fully integrate the server to function with the GUI.
 
 \section*{What we learned}
 From this lab, we learned that programming sockets in C is a lot more difficult than programming sockets in Java, and protocols that are easy to use with Telnet are easier to develop. Also, we learned how to incorporate the ncurses library to create an elementary GUI with C.
 
 \section*{Time Analysis}
-In total Jeff spent about 15 hours working on this and Matt spent about 10. Most of Jeff's time was spent on the server and Matt's was divided among learning how to use ncurses and implementing the UI.
+In total Jeff spent about 20 hours working on this and Matt spent about 15. Most of Jeff's time was spent on the server and Matt's was divided among learning how to use ncurses and implementing the UI.
+
+\section*{UI screenshots}
+
+\begin{figure}[!h]
+\caption{UI Implementation}
+\begin{center}
+\includegraphics[scale=0.2]{ui.jpg}
+\end{center}
+\label{UI}
+\end{figure}
 
 \section*{Chatd screenshots}
 Figures~\ref{chatd-send} and \ref{chatd-receive} show telnet sessions with the chat server, sending and receiving messages or only sending, respectively. Using telnet, the headers given with
@@ -40,7 +50,7 @@ the different message types can be seen that are normally hidden by the UI for t
 \end{figure}
 
 \section*{Conclusion}
-In this lab, we successfully constructed code using POSIX threads, protected against race conditions, communicated using sockets, and implemented a GUI with ncurses. We learned quite a bit from this lab and spent a decent amount of time making sure everything worked correctly.
+In this lab, we constructed code using POSIX threads, protected against race conditions, communicated using sockets, and implemented a GUI with ncurses. We learned quite a bit from this lab and spent a decent amount of time making trying to implement all desired functionality.
 
 \section*{Appendix: Source code}
 
