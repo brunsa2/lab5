@@ -13,17 +13,31 @@
 #define KB_FIRST_TAIL 0
 #define KB_FIRST_HEAD 1
 
-#define adjusted_head(head) (head == 0 ? 16 : head)
+#define adjusted_head(head) (head == 0 ? KB_BUFFER_SIZE : head)
 
-//extern ncurses_initialized;
-mutex_id kb_buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex_id kb_buffer_mutex;
 
 static char kb_buffer[KB_BUFFER_SIZE];
 static int kb_buffer_head = KB_FIRST_HEAD, kb_buffer_tail = KB_FIRST_TAIL;
 
+static void print_buffer(void) {
+    int x = 0;
+    printf("-----------\n");
+    for(; x < KB_BUFFER_SIZE; x++) {
+        printf("%c", kb_buffer[x]);
+        if(x == kb_buffer_head) {
+            printf(" <--H");
+        }
+        if(x == kb_buffer_tail) {
+            printf(" <--T");
+        }
+        printf("\n");
+    }
+    printf("-----------\n");
+}
+
 void *kb_thread(void *argument) {
     char next_character;
-    //while(!ncurses_initialized);
     while(true) {
         next_character = getchar();
         lock(&kb_buffer_mutex);
@@ -36,7 +50,7 @@ void *kb_thread(void *argument) {
     return NULL;
 }
 
-bool kb_has_key(void) {
+bool has_key(void) {
     lock(&kb_buffer_mutex);
     if(adjusted_head(kb_buffer_head) - kb_buffer_tail == 1) {
         unlock(&kb_buffer_mutex);
@@ -47,16 +61,6 @@ bool kb_has_key(void) {
     }
 }
 
-char kb_get_key(void) {
-    char next_key;
-    lock(&kb_buffer_mutex);
-    if(!kb_has_key()) {
-        unlock(&kb_buffer_mutex);
-        return '\0';
-    } else {
-        next_key = kb_buffer[kb_buffer_tail];
-        kb_buffer_tail = (kb_buffer_head + 1) & KB_BUFFER_SIZE;
-        unlock(&kb_buffer_mutex);
-        return next_key;
-    }
+char *get_string(void) {
+    return NULL;
 }
